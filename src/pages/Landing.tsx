@@ -47,7 +47,7 @@ export default function Landing() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load movies");
+      toast.error(error instanceof Error ? error.message : "Failed to load movies");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +66,7 @@ export default function Landing() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Search failed");
+      toast.error(error instanceof Error ? error.message : "Search failed");
     } finally {
       setIsLoading(false);
     }
@@ -205,6 +205,7 @@ export default function Landing() {
             <div className="text-center py-20 text-muted-foreground">
               <Film className="h-16 w-16 mx-auto mb-4 opacity-20" />
               <p className="text-xl">No movies found</p>
+              <p className="text-sm mt-2">Check if TMDB_API_KEY is set in Integrations</p>
             </div>
           )}
         </div>

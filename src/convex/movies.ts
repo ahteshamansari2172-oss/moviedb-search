@@ -1,25 +1,45 @@
 "use node";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { MovieDb } from 'moviedb-promise';
 
-const tmdbApiKey = process.env.TMDB_API_KEY;
-const moviedb = new MovieDb(tmdbApiKey || "placeholder");
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
+
+async function fetchTMDB(endpoint: string, params: Record<string, string> = {}) {
+  if (!TMDB_API_KEY) {
+    console.error("TMDB_API_KEY is not set");
+    return { results: [] };
+  }
+  
+  const url = new URL(`${BASE_URL}${endpoint}`);
+  url.searchParams.append("api_key", TMDB_API_KEY);
+  
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.append(key, value);
+  }
+
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`TMDB API Error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch from TMDB: ${endpoint}`, error);
+    throw error;
+  }
+}
 
 export const search = action({
   args: { query: v.string() },
   handler: async (ctx, args) => {
-    if (!tmdbApiKey) {
-        console.error("TMDB_API_KEY is not set");
-        return [];
-    }
     if (!args.query) return [];
     try {
-        const res = await moviedb.searchMovie({ query: args.query });
-        return res.results || [];
-    } catch (e) {
-        console.error("Error searching movies:", e);
-        return [];
+      const data = await fetchTMDB("/search/movie", { query: args.query });
+      return data.results || [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
   },
 });
@@ -27,41 +47,38 @@ export const search = action({
 export const getPopular = action({
   args: {},
   handler: async (ctx) => {
-    if (!tmdbApiKey) return [];
     try {
-        const res = await moviedb.moviePopular();
-        return res.results || [];
-    } catch (e) {
-        console.error("Error fetching popular movies:", e);
-        return [];
+      const data = await fetchTMDB("/movie/popular");
+      return data.results || [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
   },
 });
 
 export const getTrending = action({
-    args: {},
-    handler: async (ctx) => {
-        if (!tmdbApiKey) return [];
-        try {
-            const res = await moviedb.trending({ media_type: 'movie', time_window: 'week' });
-            return res.results || [];
-        } catch (e) {
-            console.error("Error fetching trending movies:", e);
-            return [];
-        }
+  args: {},
+  handler: async (ctx) => {
+    try {
+      const data = await fetchTMDB("/trending/movie/week");
+      return data.results || [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
+  },
 });
 
 export const getUpcoming = action({
-    args: {},
-    handler: async (ctx) => {
-        if (!tmdbApiKey) return [];
-        try {
-            const res = await moviedb.upcomingMovies();
-            return res.results || [];
-        } catch (e) {
-            console.error("Error fetching upcoming movies:", e);
-            return [];
-        }
+  args: {},
+  handler: async (ctx) => {
+    try {
+      const data = await fetchTMDB("/movie/upcoming");
+      return data.results || [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
+  },
 });
