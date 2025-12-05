@@ -45,7 +45,7 @@ createRoot(document.getElementById("root")!).render(
     <VlyToolbar />
     <InstrumentationProvider>
       <ConvexAuthProvider client={convex}>
-        <BrowserRouter>
+        <BrowserRouter basename="/moviedb-search">
           <RouteSyncer />
           <Routes>
             <Route path="/" element={<Landing />} />
